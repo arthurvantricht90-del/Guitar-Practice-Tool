@@ -9,8 +9,8 @@ The goal is to first recognize both chords, then the chord names can be revealed
 A secondary goal is to then set a metronome and switch between the chords at a certain BPM to practice these praticular chord changes.
 
 ## How to run
-Download the guitar_practice_tool.zip file. 
-The guitar_practice_tool.zip file contains:
+Download the main zip file. 
+The file should contain:
 - main.py - this is the main code. Run from here.
 - chord_library.py - this code is a library for chord configurations.
 
