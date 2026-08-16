@@ -1,0 +1,334 @@
+// Chord Trainer module. Ported from draw_chord_diagram() / display_chords()
+// in the original tkinter app. Drawing happens on a single <canvas> that
+// spans the card row; each chord gets an equal-width slice.
+
+const ChordTrainer = (() => {
+  const DIAGRAM_FILL = 0.52;
+
+  let canvas, ctx, labelRow, revealBtn, newChordsBtn, hintEl;
+  let countButtons = {};
+  let qualityChecks = [];
+  let gShapeCheck = null;
+  let chordCount = 2;
+  let currentChords = [];
+  let namesRevealed = false;
+  let mounted = false;
+
+  function init(root) {
+    canvas = root.querySelector("#chord-canvas");
+    ctx = canvas.getContext("2d");
+    labelRow = root.querySelector("#chord-label-row");
+    revealBtn = root.querySelector("#reveal-btn");
+    newChordsBtn = root.querySelector("#new-chords-btn");
+    hintEl = root.querySelector("#chord-hint");
+    countButtons = {
+      2: root.querySelector('[data-count="2"]'),
+      3: root.querySelector('[data-count="3"]'),
+      4: root.querySelector('[data-count="4"]'),
+    };
+    qualityChecks = Array.from(root.querySelectorAll(".quality-check"));
+    gShapeCheck = root.querySelector("#include-g-shapes");
+
+    revealBtn.addEventListener("click", onReveal);
+    newChordsBtn.addEventListener("click", newChords);
+    Object.entries(countButtons).forEach(([n, btn]) => {
+      btn.addEventListener("click", () => setCount(parseInt(n, 10)));
+    });
+
+    qualityChecks.forEach((box) => {
+      box.addEventListener("change", () => {
+        // Keep at least one quality active — otherwise there'd be nothing
+        // to generate. Re-check the box the user just cleared.
+        if (!getSelectedQualities().length) {
+          box.checked = true;
+          return;
+        }
+        newChords();
+      });
+    });
+
+    if (gShapeCheck) {
+      gShapeCheck.addEventListener("change", newChords);
+    }
+
+    window.addEventListener("resize", () => mounted && redraw());
+    ThemeManager.onChange(() => mounted && redraw());
+
+    newChords();
+  }
+
+  function onActivate() {
+    mounted = true;
+    resizeCanvasToDisplaySize();
+    redraw();
+  }
+  function onDeactivate() {
+    mounted = false;
+  }
+
+  function onReveal() {
+    if (!namesRevealed) {
+      namesRevealed = true;
+      revealBtn.textContent = "Next  →";
+      redraw();
+    } else {
+      newChords();
+    }
+  }
+
+  function getSelectedQualities() {
+    return qualityChecks.filter((b) => b.checked).map((b) => b.value);
+  }
+
+  function getExcludedShapes() {
+    return gShapeCheck && !gShapeCheck.checked ? ["G shape"] : [];
+  }
+
+  function newChords() {
+    namesRevealed = false;
+    canvas.classList.add("is-swapping");
+    window.setTimeout(() => {
+      currentChords = pickRandomChords(chordCount, getSelectedQualities(), getExcludedShapes());
+      revealBtn.textContent = "Reveal names";
+      buildLabels();
+      resizeCanvasToDisplaySize();
+      redraw();
+      requestAnimationFrame(() => canvas.classList.remove("is-swapping"));
+    }, 140);
+  }
+
+  function setCount(n) {
+    chordCount = n;
+    Object.entries(countButtons).forEach(([val, btn]) => {
+      btn.classList.toggle("selected", parseInt(val, 10) === n);
+    });
+    newChords();
+  }
+
+  function buildLabels() {
+    labelRow.innerHTML = "";
+    currentChords.forEach(() => {
+      const span = document.createElement("span");
+      span.className = "chord-label dim";
+      span.textContent = "—";
+      labelRow.appendChild(span);
+    });
+  }
+
+  function resizeCanvasToDisplaySize() {
+    const parent = canvas.parentElement;
+    const cs = window.getComputedStyle(parent);
+    // getBoundingClientRect() includes the parent's padding, so measuring
+    // it directly makes the canvas wider than the content box it sits in
+    // and pushes it off the right edge. Subtract the horizontal padding.
+    const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = Math.max(parent.getBoundingClientRect().width - padX, 300);
+    const cssH = 380;
+    canvas.style.width = cssW + "px";
+    canvas.style.height = cssH + "px";
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function redraw() {
+    const t = ThemeManager.get();
+    const cw = canvas.clientWidth || 760;
+    const ch = canvas.clientHeight || 320;
+    ctx.clearRect(0, 0, cw, ch);
+
+    const n = currentChords.length;
+    if (!n) return;
+    const pad = 14;
+    const gap = 10;
+    const cardW = (cw - pad * 2 - gap * (n - 1)) / n;
+    const cardH = ch - pad * 2;
+
+    currentChords.forEach((c, i) => {
+      const x1 = pad + i * (cardW + gap);
+      drawCard(ctx, t, x1, pad, x1 + cardW, pad + cardH);
+      drawChordDiagram(ctx, t, c.frets, x1, pad + 20, cardW, cardH);
+    });
+
+    // Labels
+    const labels = labelRow.children;
+    for (let i = 0; i < labels.length; i++) {
+      const el = labels[i];
+      if (namesRevealed) {
+        el.textContent = currentChords[i].label;
+        el.className = "chord-label lit";
+      } else {
+        el.textContent = "—";
+        el.className = "chord-label dim";
+      }
+    }
+  }
+
+  function drawCard(ctx, t, x1, y1, x2, y2, r = 12) {
+    roundedRectPath(ctx, x1, y1, x2 - x1, y2 - y1, r);
+    ctx.fillStyle = t.cardBg;
+    ctx.fill();
+    ctx.strokeStyle = t.cardBorder;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  function roundedRectPath(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function drawChordDiagramCore(ctx, t, chordStr, xOffset, yOffset, cardW, cardH) {
+    const frets = chordStr.split(", ");
+    const numeric = frets.filter((f) => f !== "x").map((f) => parseInt(f, 10));
+    if (numeric.length === 0) return;
+    const lowest = Math.min(...numeric);
+
+    const usableW = cardW * DIAGRAM_FILL;
+    const usableH = cardH * DIAGRAM_FILL;
+
+    // Real fretboards are taller than they are wide. Size the diagram from
+    // the card's height first (so wide, low-count cards don't stretch the
+    // diagram out horizontally) and only fall back to width-driven sizing
+    // if the card is too narrow to fit that at all.
+    const STRING_TO_FRET_RATIO = 0.62;
+    let fretSpacing = usableH / 4;
+    let stringSpacing = fretSpacing * STRING_TO_FRET_RATIO;
+    if (stringSpacing * 5 > usableW) {
+      stringSpacing = usableW / 5;
+      fretSpacing = stringSpacing / STRING_TO_FRET_RATIO;
+    }
+    const gridW = stringSpacing * 5;
+    const gridH = fretSpacing * 4;
+
+    const dotR = Math.max(4, stringSpacing * 0.3);
+    const openR = Math.max(3, stringSpacing * 0.24);
+    const nutWidth = Math.max(2, fretSpacing * 0.07);
+    const fretNumSz = Math.max(11, Math.floor(fretSpacing * 0.26));
+    const markerSz = Math.max(13, Math.floor(stringSpacing * 0.55));
+    const fretNumMargin = fretNumSz * 2.2;
+    const markerGap = Math.max(openR * 2 + 6, markerSz * 0.95);
+
+    // Reserve space above the grid for the mute-x / open-string markers,
+    // and now also center that whole block within the local box (this axis
+    // becomes the FINAL horizontal axis once rotated, so centering here is
+    // what centers the diagram left-to-right in the finished image).
+    const topPad = markerGap + 4;
+    const contentH = topPad + gridH;
+    const bx = xOffset + (cardW - fretNumMargin - gridW) / 2 + fretNumMargin;
+    const by = yOffset + (cardH - contentH) / 2 + topPad;
+
+    // Draws text upright regardless of the -90° rotation the whole diagram
+    // is being drawn under, by applying a local +90° counter-rotation
+    // around the given anchor point before drawing.
+    function fillUprightText(text, localX, localY, font, fillStyle, textAlign, textBaseline) {
+      ctx.save();
+      ctx.translate(localX, localY);
+      ctx.rotate(Math.PI / 2);
+      ctx.font = font;
+      ctx.fillStyle = fillStyle;
+      ctx.textAlign = textAlign || "center";
+      ctx.textBaseline = textBaseline || "middle";
+      ctx.fillText(text, 0, 0);
+      ctx.restore();
+    }
+
+    ctx.fillStyle = t.boardBg;
+    ctx.fillRect(bx, by, gridW, gridH);
+
+    // Frets (horizontal lines)
+    for (let i = 0; i < 5; i++) {
+      const y = by + i * fretSpacing;
+      ctx.beginPath();
+      ctx.moveTo(bx, y);
+      ctx.lineTo(bx + gridW, y);
+      ctx.strokeStyle = i === 0 ? t.nut : t.fret;
+      ctx.lineWidth = i === 0 ? nutWidth : Math.max(1, nutWidth * 0.4);
+      ctx.stroke();
+    }
+
+    // Strings (vertical lines)
+    for (let i = 0; i < 6; i++) {
+      const x = bx + i * stringSpacing;
+      ctx.beginPath();
+      ctx.moveTo(x, by);
+      ctx.lineTo(x, by + gridH);
+      ctx.strokeStyle = t.string;
+      ctx.lineWidth = Math.max(1, Math.round(1 + (5 - i) * 0.2));
+      ctx.stroke();
+    }
+
+    // String names along the outer left edge of the finished (rotated)
+    // image. Fret-data index 0 lands at the bottom after rotation and
+    // index 5 at the top, and the standard tuning low-to-high (E A D G B E)
+    // reads bottom to top here, so the label list maps straight to index i.
+    const STRING_NAMES = ["E", "A", "D", "G", "B", "E"];
+    const labelFont = `600 ${fretNumSz}px "IBM Plex Mono", "SFMono-Regular", Consolas, monospace`;
+    const labelLocalY = by - markerGap - fretNumSz * 1.4;
+    for (let i = 0; i < 6; i++) {
+      const x = bx + i * stringSpacing;
+      fillUprightText(STRING_NAMES[i], x, labelLocalY, labelFont, t.fretNumFg, "center", "middle");
+    }
+
+    if (lowest > 0) {
+      fillUprightText(
+        String(lowest),
+        bx - fretNumSz * 1.9,
+        by + fretSpacing * 0.5,
+        labelFont,
+        t.fretNumFg,
+        "center",
+        "middle"
+      );
+    }
+
+    frets.forEach((fret, si) => {
+      const x = bx + si * stringSpacing;
+      if (fret === "x") {
+        const muteFont = `bold ${markerSz}px Helvetica, Arial, sans-serif`;
+        fillUprightText("✕", x, by - markerGap / 2, muteFont, t.muted, "center", "middle");
+      } else {
+        const fn = parseInt(fret, 10);
+        if (fn === 0) {
+          const cy = by - markerGap + 1 + openR;
+          ctx.beginPath();
+          ctx.arc(x, cy, openR, 0, Math.PI * 2);
+          ctx.fillStyle = t.boardBg;
+          ctx.fill();
+          ctx.strokeStyle = t.openStroke;
+          ctx.lineWidth = Math.max(1, openR * 0.25);
+          ctx.stroke();
+        } else {
+          const row = fn - lowest;
+          const y = by + row * fretSpacing + fretSpacing / 2;
+          ctx.beginPath();
+          ctx.arc(x, y, dotR, 0, Math.PI * 2);
+          ctx.fillStyle = t.dotFill;
+          ctx.fill();
+        }
+      }
+    });
+  }
+
+  // Public entry point: spins the diagram 90° counterclockwise ("to the
+  // left") around the card's center. The core routine is asked to lay
+  // itself out in a box with width/height swapped, so that once physically
+  // rotated its footprint lands back on the original card at the same
+  // relative proportions instead of being stretched or clipped.
+  function drawChordDiagram(ctx, t, chordStr, xOffset, yOffset, cardW, cardH) {
+    ctx.save();
+    ctx.translate(xOffset + cardW / 2, yOffset + cardH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.translate(-cardH / 2, -cardW / 2);
+    drawChordDiagramCore(ctx, t, chordStr, 0, 0, cardH, cardW);
+    ctx.restore();
+  }
+
+  return { init, onActivate, onDeactivate };
+})();
