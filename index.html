@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Frettr — Guitar Practice</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <button class="brand" id="brand-home" type="button">
+        <span class="brand-mark">✦</span>
+        <span class="brand-name">Frettr</span>
+      </button>
+      <div class="nav-wrap">
+        <span class="nav-indicator" id="nav-indicator"></span>
+        <ul class="nav-list">
+          <li><button class="nav-item active" data-module="home">Home</button></li>
+          <li><button class="nav-item" data-module="chords">Chord Trainer</button></li>
+          <li><button class="nav-item" data-module="scales">Scale Trainer</button></li>
+          <li><button class="nav-item" data-module="triads">Triad Trainer</button></li>
+          <li><button class="nav-item" data-module="fretboard">Fretboard Trainer</button></li>
+        </ul>
+      </div>
+      <button id="theme-toggle" class="theme-toggle">☾ Dark</button>
+    </nav>
+
+    <main class="content">
+      <section id="module-home" class="module active">
+        <div class="home-hero">
+          <div class="hero-strings" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <h1 class="home-title">Welcome to Frettr</h1>
+          <p class="home-slogan">Ready to up your guitar game?</p>
+        </div>
+
+        <div class="module-grid">
+          <button class="module-card" data-module="chords" type="button">
+            <span class="module-card-title">Chord Trainer</span>
+            <span class="module-card-desc">Identify chord shapes across the neck, then reveal to check yourself.</span>
+            <span class="module-card-status available">Start training →</span>
+          </button>
+
+          <button class="module-card" data-module="scales" type="button">
+            <span class="module-card-title">Scale Trainer</span>
+            <span class="module-card-desc">Major, minor, and pentatonic scale patterns up and down the fretboard.</span>
+            <span class="module-card-status available">Start training →</span>
+          </button>
+
+          <button class="module-card" data-module="triads" type="button">
+            <span class="module-card-title">Triad Trainer</span>
+            <span class="module-card-desc">Triads and their inversions across string sets.</span>
+            <span class="module-card-status available">Start training →</span>
+          </button>
+
+          <button class="module-card" data-module="fretboard" type="button">
+            <span class="module-card-title">Fretboard Trainer</span>
+            <span class="module-card-desc">Learn every note on every string, cold.</span>
+            <span class="module-card-status available">Start training →</span>
+          </button>
+        </div>
+      </section>
+
+      <section id="module-chords" class="module">
+        <div class="module-header">
+          <button class="back-link" id="chords-back-home" type="button">Home</button>
+          <h1 class="module-title">Chord Trainer</h1>
+          <p class="module-subtitle">Identify the shapes, then reveal</p>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="chord-canvas"></canvas>
+        </div>
+
+        <div id="chord-label-row" class="chord-label-row"></div>
+
+        <div class="filter-row">
+          <span class="control-label filter-label">include:</span>
+          <label class="check-chip">
+            <input type="checkbox" class="quality-check" value="major" checked />
+            <span>Major</span>
+          </label>
+          <label class="check-chip">
+            <input type="checkbox" class="quality-check" value="minor" checked />
+            <span>Minor</span>
+          </label>
+          <label class="check-chip">
+            <input type="checkbox" class="quality-check" value="major seven" checked />
+            <span>Major 7th</span>
+          </label>
+          <label class="check-chip">
+            <input type="checkbox" class="quality-check" value="minor seven" checked />
+            <span>Minor 7th</span>
+          </label>
+          <span class="filter-divider" aria-hidden="true"></span>
+          <label class="check-chip">
+            <input type="checkbox" id="include-g-shapes" />
+            <span>G shapes</span>
+          </label>
+        </div>
+
+        <div class="control-row">
+          <button id="reveal-btn" class="pill-btn primary">Reveal names</button>
+          <button id="new-chords-btn" class="pill-btn">New chords</button>
+          <span class="control-label">chords:</span>
+          <button class="pill-btn count selected" data-count="2">2</button>
+          <button class="pill-btn count" data-count="3">3</button>
+          <button class="pill-btn count" data-count="4">4</button>
+        </div>
+
+        <p id="chord-hint" class="hint">Space or Enter to reveal / advance</p>
+      </section>
+
+      <section id="module-fretboard" class="module">
+        <div class="module-header">
+          <button class="back-link" id="fretboard-back-home" type="button">Home</button>
+          <h1 class="module-title">Fretboard Trainer</h1>
+          <p class="module-subtitle">Name the marked note before the timer runs out</p>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="fretboard-canvas"></canvas>
+        </div>
+
+        <div class="fb-progress">
+          <div class="fb-progress-fill" id="fb-progress-fill"></div>
+        </div>
+
+        <p class="fb-status" id="fb-status">Name the note</p>
+
+        <div class="control-row">
+          <button id="fb-play" class="pill-btn primary">Pause</button>
+          <span class="control-label">timer:</span>
+          <input type="range" id="fb-timer" class="slider" min="1" max="20" step="1" value="5" />
+          <span class="slider-value" id="fb-timer-value">5s</span>
+        </div>
+
+        <p class="hint">The answer shows for 2 seconds, then a new note appears</p>
+      </section>
+
+      <section id="module-scales" class="module">
+        <div class="module-header">
+          <button class="back-link" type="button">Home</button>
+          <h1 class="module-title">Scale Trainer</h1>
+          <p class="module-subtitle">Pick a root and a scale to see it mapped across the neck</p>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="scale-canvas"></canvas>
+        </div>
+
+        <p class="scale-notes" id="scale-notes"></p>
+
+        <div class="control-row root-row" id="scale-root-row"></div>
+        <div class="control-row" id="scale-type-row"></div>
+
+        <div class="filter-row">
+          <label class="check-chip">
+            <input type="checkbox" id="scale-show-names" checked />
+            <span>Show note names</span>
+          </label>
+        </div>
+
+        <p class="hint">Highlighted notes are the root</p>
+      </section>
+
+      <section id="module-triads" class="module">
+        <div class="module-header">
+          <button class="back-link" type="button">Home</button>
+          <h1 class="module-title">Triad Trainer</h1>
+          <p class="module-subtitle">Identify the triad and its inversion, then reveal</p>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="triad-canvas"></canvas>
+        </div>
+
+        <div id="triad-label-row" class="chord-label-row"></div>
+
+        <div class="filter-row">
+          <span class="control-label filter-label">quality:</span>
+          <label class="check-chip">
+            <input type="checkbox" class="triad-quality-check" value="major" checked />
+            <span>Major</span>
+          </label>
+          <label class="check-chip">
+            <input type="checkbox" class="triad-quality-check" value="minor" checked />
+            <span>Minor</span>
+          </label>
+        </div>
+
+        <div class="filter-row">
+          <span class="control-label filter-label">position:</span>
+          <label class="check-chip">
+            <input type="checkbox" class="triad-inversion-check" value="root position" checked />
+            <span>Root position</span>
+          </label>
+          <label class="check-chip">
+            <input type="checkbox" class="triad-inversion-check" value="1st inversion" checked />
+            <span>1st inversion</span>
+          </label>
+          <label class="check-chip">
+            <input type="checkbox" class="triad-inversion-check" value="2nd inversion" checked />
+            <span>2nd inversion</span>
+          </label>
+        </div>
+
+        <div class="filter-row">
+          <span class="control-label filter-label">strings:</span>
+          <label class="check-chip">
+            <input type="checkbox" class="triad-set-check" value="E-B-G" checked />
+            <span>E-B-G</span>
+          </label>
+          <label class="check-chip">
+            <input type="checkbox" class="triad-set-check" value="B-G-D" checked />
+            <span>B-G-D</span>
+          </label>
+          <label class="check-chip">
+            <input type="checkbox" class="triad-set-check" value="G-D-A" checked />
+            <span>G-D-A</span>
+          </label>
+          <label class="check-chip">
+            <input type="checkbox" class="triad-set-check" value="D-A-E" checked />
+            <span>D-A-E</span>
+          </label>
+        </div>
+
+        <div class="control-row">
+          <button id="triad-reveal-btn" class="pill-btn primary">Reveal names</button>
+          <button id="triad-new-btn" class="pill-btn">New triads</button>
+          <span class="control-label">triads:</span>
+          <button class="pill-btn count selected" data-triad-count="2">2</button>
+          <button class="pill-btn count" data-triad-count="3">3</button>
+          <button class="pill-btn count" data-triad-count="4">4</button>
+        </div>
+
+        <p class="hint">Triads are three notes — no seventh chords here</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/theme.js"></script>
+  <script src="js/fretDiagram.js"></script>
+  <script src="js/chordData.js"></script>
+  <script src="js/chordTrainer.js"></script>
+  <script src="js/fretboardTrainer.js"></script>
+  <script src="js/scaleTrainer.js"></script>
+  <script src="js/triadData.js"></script>
+  <script src="js/triadTrainer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
