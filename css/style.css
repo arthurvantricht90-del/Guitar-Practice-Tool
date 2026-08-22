@@ -703,6 +703,7 @@ body {
 
 /* ---------------- Fretboard Trainer ---------------- */
 
+<<<<<<< HEAD
 #module-fretboard .canvas-wrap,
 #module-scales .canvas-wrap {
   padding-left: 20px;
@@ -710,6 +711,16 @@ body {
 }
 
 #fretboard-canvas {
+=======
+#module-fretboard .canvas-wrap {
+  padding-left: 34px;
+  padding-right: 34px;
+}
+
+#fretboard-canvas {
+  width: 100%;
+  height: 100%;
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
   display: block;
 }
 
@@ -803,7 +814,18 @@ body {
 
 /* ---------------- Scale Trainer ---------------- */
 
+<<<<<<< HEAD
 #scale-canvas {
+=======
+#module-scales .canvas-wrap {
+  padding-left: 34px;
+  padding-right: 34px;
+}
+
+#scale-canvas {
+  width: 100%;
+  height: 100%;
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
   display: block;
 }
 
@@ -840,6 +862,11 @@ body {
 }
 
 #triad-canvas {
+<<<<<<< HEAD
+=======
+  width: 100%;
+  height: 100%;
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
   display: block;
   opacity: 1;
   transition: opacity 0.2s ease;
@@ -860,6 +887,7 @@ body {
   text-align: center;
 }
 
+<<<<<<< HEAD
 /* ---------------- Responsive ---------------- */
 
 @media (max-width: 900px) {
@@ -879,10 +907,15 @@ body {
 @media (max-width: 720px) {
   .app-shell { flex-direction: column; }
 
+=======
+@media (max-width: 640px) {
+  .app-shell { flex-direction: column; }
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
   .sidebar {
     width: 100%;
     flex-direction: row;
     align-items: center;
+<<<<<<< HEAD
     gap: 10px;
     padding: 10px 12px;
     border-right: none;
@@ -1586,4 +1619,15 @@ body.landscape-active { overflow: hidden; }
   .hint { display: none; }
   .control-row { padding-top: 4px; padding-bottom: 4px; }
   .canvas-wrap { padding-top: 6px; }
+=======
+    overflow-x: auto;
+    padding: 10px 12px;
+  }
+  .nav-wrap { flex: none; }
+  .nav-list { display: flex; gap: 4px; }
+  .nav-indicator { display: none; }
+  .brand { padding: 0 12px 0 0; }
+  .theme-toggle { margin-left: auto; flex-shrink: 0; }
+  .home-title { font-size: 34px; }
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
 }

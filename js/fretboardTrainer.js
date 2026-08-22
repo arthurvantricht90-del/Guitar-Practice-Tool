@@ -180,12 +180,22 @@ const FretboardTrainer = (() => {
   function resizeCanvas() {
     const parent = canvas.parentElement;
     const cs = window.getComputedStyle(parent);
+<<<<<<< HEAD
     const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
     const dpr = window.devicePixelRatio || 1;
     // Splits into two stacked halves when too narrow for 24 frets in a row,
     // so the whole neck is visible without sideways scrolling.
     const cssW = Math.max(parent.getBoundingClientRect().width - padX, 280);
     const cssH = BoardRenderer.computeBoardLayout(cssW, { splitBelow: 720 }).canvasH;
+=======
+    // getBoundingClientRect() includes the parent's padding, so measuring
+    // it directly makes the canvas wider than the content box it sits in
+    // and pushes it off the right edge. Subtract the horizontal padding.
+    const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = Math.max(parent.getBoundingClientRect().width - padX, 320);
+    const cssH = 300;
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
     canvas.style.width = cssW + "px";
     canvas.style.height = cssH + "px";
     canvas.width = Math.round(cssW * dpr);
@@ -200,6 +210,7 @@ const FretboardTrainer = (() => {
     const h = canvas.clientHeight || 300;
     ctx.clearRect(0, 0, w, h);
 
+<<<<<<< HEAD
     const layout = BoardRenderer.computeBoardLayout(w, { splitBelow: 720 });
     const revealed = phase === "reveal";
     const markers = [];
@@ -230,6 +241,112 @@ const FretboardTrainer = (() => {
         x: padX, y: 14, w: w - padX * 2, h: layout.sectionH - 22,
         fromFret: 1, toFret: 24, showOpen: false, markers,
       });
+=======
+    const padLeft = 42;
+    const padRight = 34;
+    const padTop = 30;
+    const padBottom = 40;
+    const boardX = padLeft;
+    const boardY = padTop;
+    const boardW = Math.max(120, w - padLeft - padRight);
+    const boardH = Math.max(90, h - padTop - padBottom);
+    const fretSpacing = boardW / FRET_COUNT;
+    const stringSpacing = boardH / 5;
+
+    // Board face
+    ctx.fillStyle = t.boardBg;
+    ctx.fillRect(boardX, boardY, boardW, boardH);
+
+    // Inlay markers, drawn under the strings
+    ctx.fillStyle = "rgba(90, 74, 42, 0.22)";
+    const inlayR = Math.min(stringSpacing * 0.3, fretSpacing * 0.3);
+    SINGLE_INLAYS.forEach((f) => {
+      if (f > FRET_COUNT) return;
+      const cx = boardX + (f - 0.5) * fretSpacing;
+      ctx.beginPath();
+      ctx.arc(cx, boardY + boardH / 2, inlayR, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    DOUBLE_INLAYS.forEach((f) => {
+      if (f > FRET_COUNT) return;
+      const cx = boardX + (f - 0.5) * fretSpacing;
+      [boardY + boardH * 0.3, boardY + boardH * 0.7].forEach((cy) => {
+        ctx.beginPath();
+        ctx.arc(cx, cy, inlayR, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    });
+
+    // Frets (vertical lines); index 0 is the nut
+    for (let f = 0; f <= FRET_COUNT; f++) {
+      const x = boardX + f * fretSpacing;
+      ctx.beginPath();
+      ctx.moveTo(x, boardY);
+      ctx.lineTo(x, boardY + boardH);
+      ctx.strokeStyle = f === 0 ? t.nut : t.fret;
+      ctx.lineWidth = f === 0 ? 6 : 1.2;
+      ctx.stroke();
+    }
+
+    // Strings (horizontal lines), thickest at the bottom (low E)
+    for (let s = 0; s < 6; s++) {
+      const y = boardY + (5 - s) * stringSpacing;
+      ctx.beginPath();
+      ctx.moveTo(boardX, y);
+      ctx.lineTo(boardX + boardW, y);
+      ctx.strokeStyle = t.string;
+      ctx.lineWidth = Math.max(1, 1 + s * 0.45);
+      ctx.stroke();
+    }
+
+    // String name labels down the left edge
+    ctx.font = '600 13px "IBM Plex Mono", "SFMono-Regular", Consolas, monospace';
+    ctx.fillStyle = t.fretNumFg;
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    for (let s = 0; s < 6; s++) {
+      const y = boardY + (5 - s) * stringSpacing;
+      ctx.fillText(STRING_LABELS[s], boardX - 12, y);
+    }
+
+    // Fret numbers below the board. With 24 frets there isn't room for
+    // every number, so only the conventional position markers are labelled.
+    ctx.font = '600 11px "IBM Plex Mono", "SFMono-Regular", Consolas, monospace';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    NUMBERED_FRETS.forEach((f) => {
+      if (f > FRET_COUNT) return;
+      const x = boardX + (f - 0.5) * fretSpacing;
+      ctx.fillText(String(f), x, boardY + boardH + 11);
+    });
+
+    // The target marker
+    if (target) {
+      const mx = boardX + (target.fret - 0.5) * fretSpacing;
+      const my = boardY + (5 - target.string) * stringSpacing;
+      const r = Math.min(stringSpacing * 0.46, Math.max(fretSpacing * 0.62, 11), 24);
+      const revealed = phase === "reveal";
+
+      ctx.beginPath();
+      ctx.arc(mx, my, r, 0, Math.PI * 2);
+      ctx.fillStyle = revealed ? t.accent : t.dotFill;
+      ctx.fill();
+      ctx.strokeStyle = revealed ? t.accentSoft : t.accent;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      if (revealed) {
+        ctx.fillStyle = "#14110c";
+        ctx.font = `700 ${Math.max(11, Math.round(r * 0.8))}px "Inter", system-ui, sans-serif`;
+        ctx.fillText(target.note, mx, my + 1);
+      } else {
+        ctx.fillStyle = t.accent;
+        ctx.font = `700 ${Math.max(11, Math.round(r * 0.9))}px "Inter", system-ui, sans-serif`;
+        ctx.fillText("?", mx, my + 1);
+      }
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
     }
 
     updateChrome();

@@ -4,8 +4,13 @@
 
 const ChordTrainer = (() => {
 
+<<<<<<< HEAD
   let canvas, ctx, revealBtn, newChordsBtn, hintEl;
   let countRadios = [];
+=======
+  let canvas, ctx, labelRow, revealBtn, newChordsBtn, hintEl;
+  let countButtons = {};
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
   let qualityChecks = [];
   let gShapeCheck = null;
   let chordCount = 2;
@@ -16,19 +21,36 @@ const ChordTrainer = (() => {
   function init(root) {
     canvas = root.querySelector("#chord-canvas");
     ctx = canvas.getContext("2d");
+<<<<<<< HEAD
     revealBtn = root.querySelector("#reveal-btn");
     newChordsBtn = root.querySelector("#new-chords-btn");
     hintEl = root.querySelector("#chord-hint");
     countRadios = Array.from(root.querySelectorAll('input[name="chord-count"]'));
+=======
+    labelRow = root.querySelector("#chord-label-row");
+    revealBtn = root.querySelector("#reveal-btn");
+    newChordsBtn = root.querySelector("#new-chords-btn");
+    hintEl = root.querySelector("#chord-hint");
+    countButtons = {
+      2: root.querySelector('[data-count="2"]'),
+      3: root.querySelector('[data-count="3"]'),
+      4: root.querySelector('[data-count="4"]'),
+    };
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
     qualityChecks = Array.from(root.querySelectorAll(".quality-check"));
     gShapeCheck = root.querySelector("#include-g-shapes");
 
     revealBtn.addEventListener("click", onReveal);
     newChordsBtn.addEventListener("click", newChords);
+<<<<<<< HEAD
     countRadios.forEach((radio) => {
       radio.addEventListener("change", () => {
         if (radio.checked) setCount(parseInt(radio.dataset.count, 10));
       });
+=======
+    Object.entries(countButtons).forEach(([n, btn]) => {
+      btn.addEventListener("click", () => setCount(parseInt(n, 10)));
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
     });
 
     qualityChecks.forEach((box) => {
@@ -47,11 +69,15 @@ const ChordTrainer = (() => {
       gShapeCheck.addEventListener("change", newChords);
     }
 
+<<<<<<< HEAD
     window.addEventListener("resize", () => {
       if (!mounted) return;
       resizeCanvasToDisplaySize();
       redraw();
     });
+=======
+    window.addEventListener("resize", () => mounted && redraw());
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
     ThemeManager.onChange(() => mounted && redraw());
 
     newChords();
@@ -90,6 +116,10 @@ const ChordTrainer = (() => {
     window.setTimeout(() => {
       currentChords = pickRandomChords(chordCount, getSelectedQualities(), getExcludedShapes());
       revealBtn.textContent = "Reveal names";
+<<<<<<< HEAD
+=======
+      buildLabels();
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
       resizeCanvasToDisplaySize();
       redraw();
       requestAnimationFrame(() => canvas.classList.remove("is-swapping"));
@@ -98,9 +128,28 @@ const ChordTrainer = (() => {
 
   function setCount(n) {
     chordCount = n;
+<<<<<<< HEAD
     newChords();
   }
 
+=======
+    Object.entries(countButtons).forEach(([val, btn]) => {
+      btn.classList.toggle("selected", parseInt(val, 10) === n);
+    });
+    newChords();
+  }
+
+  function buildLabels() {
+    labelRow.innerHTML = "";
+    currentChords.forEach(() => {
+      const span = document.createElement("span");
+      span.className = "chord-label dim";
+      span.textContent = "—";
+      labelRow.appendChild(span);
+    });
+  }
+
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
   function resizeCanvasToDisplaySize() {
     const parent = canvas.parentElement;
     const cs = window.getComputedStyle(parent);
@@ -109,8 +158,13 @@ const ChordTrainer = (() => {
     // and pushes it off the right edge. Subtract the horizontal padding.
     const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
     const dpr = window.devicePixelRatio || 1;
+<<<<<<< HEAD
     const cssW = Math.max(parent.getBoundingClientRect().width - padX, 260);
     const cssH = FretDiagram.computeLayout(cssW, currentChords.length || chordCount).canvasH;
+=======
+    const cssW = Math.max(parent.getBoundingClientRect().width - padX, 300);
+    const cssH = 380;
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
     canvas.style.width = cssW + "px";
     canvas.style.height = cssH + "px";
     canvas.width = Math.round(cssW * dpr);
@@ -126,6 +180,7 @@ const ChordTrainer = (() => {
 
     const n = currentChords.length;
     if (!n) return;
+<<<<<<< HEAD
     const L = FretDiagram.computeLayout(cw, n);
 
     currentChords.forEach((c, i) => {
@@ -143,6 +198,31 @@ const ChordTrainer = (() => {
       );
     });
 
+=======
+    const pad = 14;
+    const gap = 10;
+    const cardW = (cw - pad * 2 - gap * (n - 1)) / n;
+    const cardH = ch - pad * 2;
+
+    currentChords.forEach((c, i) => {
+      const x1 = pad + i * (cardW + gap);
+      FretDiagram.drawCard(ctx, t, x1, pad, x1 + cardW, pad + cardH);
+      FretDiagram.drawChordDiagram(ctx, t, c.frets, x1, pad + 20, cardW, cardH);
+    });
+
+    // Labels
+    const labels = labelRow.children;
+    for (let i = 0; i < labels.length; i++) {
+      const el = labels[i];
+      if (namesRevealed) {
+        el.textContent = currentChords[i].label;
+        el.className = "chord-label lit";
+      } else {
+        el.textContent = "—";
+        el.className = "chord-label dim";
+      }
+    }
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
   }
 
 

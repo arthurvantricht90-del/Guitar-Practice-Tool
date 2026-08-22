@@ -22,7 +22,10 @@ document.addEventListener("DOMContentLoaded", () => {
     fretboard: FretboardTrainer,
     scales: ScaleTrainer,
     triads: TriadTrainer,
+<<<<<<< HEAD
     keyjam: KeyJam,
+=======
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
   };
 
   const chordsRoot = document.getElementById("module-chords");
@@ -37,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const triadsRoot = document.getElementById("module-triads");
   TriadTrainer.init(triadsRoot);
 
+<<<<<<< HEAD
   const keyjamRoot = document.getElementById("module-keyjam");
   KeyJam.init(keyjamRoot);
 
@@ -53,6 +57,11 @@ document.addEventListener("DOMContentLoaded", () => {
       navIndicator.style.opacity = "0";
       return;
     }
+=======
+  const navIndicator = document.getElementById("nav-indicator");
+  function moveNavIndicator(btn) {
+    if (!navIndicator || !btn) return;
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
     const list = btn.closest(".nav-list");
     const listRect = list.getBoundingClientRect();
     const btnRect = btn.getBoundingClientRect();
@@ -75,7 +84,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     document.querySelectorAll(".module").forEach((s) => s.classList.remove("active"));
     section.classList.add("active");
+<<<<<<< HEAD
     Drawer.closeAll();
+=======
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
 
     if (MODULES[activeModule] && MODULES[activeModule].onDeactivate) {
       MODULES[activeModule].onDeactivate();
@@ -103,6 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+<<<<<<< HEAD
   // Collapsible module menu, used on short landscape screens where a full
   // sidebar would eat too much width.
   const sidebar = document.querySelector(".sidebar");
@@ -130,6 +143,11 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => {
       if (btn.disabled) return;
       setNavOpen(false);
+=======
+  document.querySelectorAll(".nav-item").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (btn.disabled) return;
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
       activateModule(btn.dataset.module);
     });
   });
@@ -143,10 +161,14 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const brandHome = document.getElementById("brand-home");
+<<<<<<< HEAD
   if (brandHome) brandHome.addEventListener("click", () => {
     setNavOpen(false);
     activateModule("home");
   });
+=======
+  if (brandHome) brandHome.addEventListener("click", () => activateModule("home"));
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
 
   // Space / Enter reveals or advances, but only while the chord module is
   // active and focus isn't on a button (avoid double-triggering clicks).

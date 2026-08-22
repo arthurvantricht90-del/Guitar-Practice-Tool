@@ -12,7 +12,11 @@ const ScaleTrainer = (() => {
   // Open-string pitch classes, index 0 = low E (drawn at the bottom).
   const OPEN_STRINGS = [4, 9, 2, 7, 11, 4];
   const STRING_LABELS = ["E", "A", "D", "G", "B", "E"];
+<<<<<<< HEAD
   const FRET_COUNT = 22;  // standard electric guitar
+=======
+  const FRET_COUNT = 24;
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
   const SINGLE_INLAYS = [3, 5, 7, 9, 15, 17, 19, 21];
   const DOUBLE_INLAYS = [12, 24];
   const NUMBERED_FRETS = [1, 3, 5, 7, 9, 12, 15, 17, 19, 21, 24];
@@ -31,9 +35,12 @@ const ScaleTrainer = (() => {
 
   let canvas, ctx, rootRow, typeRow, scaleNotesEl, namesToggle;
   let mounted = false;
+<<<<<<< HEAD
   let stage, lsBtn, lsExitBtn, lsHint, section;
   let landscape = false;  // larger-view stage active
   let rotated = false;    // stage is quarter-turned because the phone is upright
+=======
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
   let root = "G";
   let scaleType = "major";
   let showNames = true;
@@ -87,6 +94,7 @@ const ScaleTrainer = (() => {
     rootPc = pitchClassOf(root);
   }
 
+<<<<<<< HEAD
   // ---- larger view --------------------------------------------------------
 
   function isPortrait() {
@@ -201,6 +209,34 @@ const ScaleTrainer = (() => {
       label.appendChild(span);
       input.addEventListener("change", () => { if (input.checked) setType(key); });
       typeRow.appendChild(label);
+=======
+  function init(hostRoot) {
+    canvas = hostRoot.querySelector("#scale-canvas");
+    ctx = canvas.getContext("2d");
+    rootRow = hostRoot.querySelector("#scale-root-row");
+    typeRow = hostRoot.querySelector("#scale-type-row");
+    scaleNotesEl = hostRoot.querySelector("#scale-notes");
+    namesToggle = hostRoot.querySelector("#scale-show-names");
+
+    // Root buttons
+    ROOTS.forEach((r) => {
+      const btn = document.createElement("button");
+      btn.className = "pill-btn count" + (r === root ? " selected" : "");
+      btn.textContent = r;
+      btn.dataset.root = r;
+      btn.addEventListener("click", () => setRoot(r));
+      rootRow.appendChild(btn);
+    });
+
+    // Scale type buttons
+    Object.entries(SCALE_TYPES).forEach(([key, def]) => {
+      const btn = document.createElement("button");
+      btn.className = "pill-btn" + (key === scaleType ? " selected" : "");
+      btn.textContent = def.label;
+      btn.dataset.type = key;
+      btn.addEventListener("click", () => setType(key));
+      typeRow.appendChild(btn);
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
     });
 
     if (namesToggle) {
@@ -212,7 +248,10 @@ const ScaleTrainer = (() => {
 
     window.addEventListener("resize", () => {
       if (!mounted) return;
+<<<<<<< HEAD
       if (landscape) { syncOrientation(); return; }
+=======
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
       resizeCanvas();
       draw();
     });
@@ -229,21 +268,37 @@ const ScaleTrainer = (() => {
 
   function onDeactivate() {
     mounted = false;
+<<<<<<< HEAD
     if (landscape) exitLandscape();
+=======
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
   }
 
   function setRoot(r) {
     root = r;
+<<<<<<< HEAD
+=======
+    rootRow.querySelectorAll("button").forEach((b) => {
+      b.classList.toggle("selected", b.dataset.root === r);
+    });
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
     buildScale();
     draw();
   }
 
   function setType(key) {
     scaleType = key;
+<<<<<<< HEAD
+=======
+    typeRow.querySelectorAll("button").forEach((b) => {
+      b.classList.toggle("selected", b.dataset.type === key);
+    });
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
     buildScale();
     draw();
   }
 
+<<<<<<< HEAD
   // Board geometry, shared by the sizing and drawing passes so they can't
   // disagree. Given the space available it works out fret spacing first,
   // then fits string spacing to whatever height is left, so the board always
@@ -299,11 +354,21 @@ const ScaleTrainer = (() => {
     const cssW = size.w;
     const cssH = size.h ? Math.min(g.canvasH, size.h) : g.canvasH;
 
+=======
+  function resizeCanvas() {
+    const parent = canvas.parentElement;
+    const cs = window.getComputedStyle(parent);
+    const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = Math.max(parent.getBoundingClientRect().width - padX, 320);
+    const cssH = 300;
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
     canvas.style.width = cssW + "px";
     canvas.style.height = cssH + "px";
     canvas.width = Math.round(cssW * dpr);
     canvas.height = Math.round(cssH * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+<<<<<<< HEAD
 
     if (stage) {
       // The rotated stage needs explicit dimensions, since a rotation
@@ -332,11 +397,14 @@ const ScaleTrainer = (() => {
       }
     }
     return markers;
+=======
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
   }
 
   function draw() {
     if (!ctx) return;
     const t = ThemeManager.get();
+<<<<<<< HEAD
     const w = canvas.clientWidth || 900;
     const h = canvas.clientHeight || 300;
     ctx.clearRect(0, 0, w, h);
@@ -355,6 +423,116 @@ const ScaleTrainer = (() => {
       openGap: g.openGap,
       numberGap: g.numberGap,
     });
+=======
+    const w = canvas.clientWidth || 800;
+    const h = canvas.clientHeight || 300;
+    ctx.clearRect(0, 0, w, h);
+
+    // Extra room on the left for open-string markers sitting before the nut.
+    const padLeft = 78;
+    const padRight = 34;
+    const padTop = 34;
+    const padBottom = 46;
+    const boardX = padLeft;
+    const boardY = padTop;
+    const boardW = Math.max(120, w - padLeft - padRight);
+    const boardH = Math.max(90, h - padTop - padBottom);
+    const fretSpacing = boardW / FRET_COUNT;
+    const stringSpacing = boardH / 5;
+
+    ctx.fillStyle = t.boardBg;
+    ctx.fillRect(boardX, boardY, boardW, boardH);
+
+    // Inlays under the strings
+    ctx.fillStyle = "rgba(90, 74, 42, 0.22)";
+    const inlayR = Math.min(stringSpacing * 0.3, fretSpacing * 0.3);
+    SINGLE_INLAYS.forEach((f) => {
+      if (f > FRET_COUNT) return;
+      ctx.beginPath();
+      ctx.arc(boardX + (f - 0.5) * fretSpacing, boardY + boardH / 2, inlayR, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    DOUBLE_INLAYS.forEach((f) => {
+      if (f > FRET_COUNT) return;
+      const cx = boardX + (f - 0.5) * fretSpacing;
+      [boardY + boardH * 0.3, boardY + boardH * 0.7].forEach((cy) => {
+        ctx.beginPath();
+        ctx.arc(cx, cy, inlayR, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    });
+
+    // Frets
+    for (let f = 0; f <= FRET_COUNT; f++) {
+      const x = boardX + f * fretSpacing;
+      ctx.beginPath();
+      ctx.moveTo(x, boardY);
+      ctx.lineTo(x, boardY + boardH);
+      ctx.strokeStyle = f === 0 ? t.nut : t.fret;
+      ctx.lineWidth = f === 0 ? 6 : 1.2;
+      ctx.stroke();
+    }
+
+    // Strings
+    for (let s = 0; s < 6; s++) {
+      const y = boardY + (5 - s) * stringSpacing;
+      ctx.beginPath();
+      ctx.moveTo(boardX, y);
+      ctx.lineTo(boardX + boardW, y);
+      ctx.strokeStyle = t.string;
+      ctx.lineWidth = Math.max(1, 1 + s * 0.45);
+      ctx.stroke();
+    }
+
+    // String labels
+    ctx.font = '600 13px "IBM Plex Mono", "SFMono-Regular", Consolas, monospace';
+    ctx.fillStyle = t.fretNumFg;
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    for (let s = 0; s < 6; s++) {
+      ctx.fillText(STRING_LABELS[s], boardX - 58, boardY + (5 - s) * stringSpacing);
+    }
+
+    // Fret numbers
+    ctx.font = '600 11px "IBM Plex Mono", "SFMono-Regular", Consolas, monospace';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    NUMBERED_FRETS.forEach((f) => {
+      if (f > FRET_COUNT) return;
+      ctx.fillText(String(f), boardX + (f - 0.5) * fretSpacing, boardY + boardH + 20);
+    });
+
+    // Scale tones. Fret 0 (open strings) is drawn just left of the nut.
+    const r = Math.min(stringSpacing * 0.44, fretSpacing * 0.44, 17);
+    for (let s = 0; s < 6; s++) {
+      const y = boardY + (5 - s) * stringSpacing;
+      for (let f = 0; f <= FRET_COUNT; f++) {
+        const pc = (OPEN_STRINGS[s] + f) % 12;
+        if (!scalePcs.has(pc)) continue;
+
+        const x = f === 0 ? boardX - 22 : boardX + (f - 0.5) * fretSpacing;
+        const isRoot = pc === rootPc;
+
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = isRoot ? t.accent : t.dotFill;
+        ctx.fill();
+        if (isRoot) {
+          ctx.strokeStyle = t.accentSoft;
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+        }
+
+        if (showNames) {
+          ctx.fillStyle = isRoot ? "#14110c" : t.boardBg;
+          ctx.font = `${isRoot ? 700 : 600} ${Math.max(9, Math.round(r * 0.72))}px "Inter", system-ui, sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(pcToName[pc], x, y + 1);
+        }
+      }
+    }
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
 
     updateCaption();
   }

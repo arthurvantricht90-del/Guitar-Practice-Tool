@@ -3,8 +3,12 @@
 // seventh-chord quality.
 
 const TriadTrainer = (() => {
+<<<<<<< HEAD
   let canvas, ctx, revealBtn, newBtn;
   let countRadios = [];
+=======
+  let canvas, ctx, labelRow, revealBtn, newBtn, countButtons = {};
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
   let qualityChecks = [];
   let inversionChecks = [];
   let stringSetChecks = [];
@@ -16,9 +20,20 @@ const TriadTrainer = (() => {
   function init(root) {
     canvas = root.querySelector("#triad-canvas");
     ctx = canvas.getContext("2d");
+<<<<<<< HEAD
     revealBtn = root.querySelector("#triad-reveal-btn");
     newBtn = root.querySelector("#triad-new-btn");
     countRadios = Array.from(root.querySelectorAll('input[name="triad-count"]'));
+=======
+    labelRow = root.querySelector("#triad-label-row");
+    revealBtn = root.querySelector("#triad-reveal-btn");
+    newBtn = root.querySelector("#triad-new-btn");
+    countButtons = {
+      2: root.querySelector('#module-triads [data-triad-count="2"]') || root.querySelector('[data-triad-count="2"]'),
+      3: root.querySelector('[data-triad-count="3"]'),
+      4: root.querySelector('[data-triad-count="4"]'),
+    };
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
     qualityChecks = Array.from(root.querySelectorAll(".triad-quality-check"));
     inversionChecks = Array.from(root.querySelectorAll(".triad-inversion-check"));
     stringSetChecks = Array.from(root.querySelectorAll(".triad-set-check"));
@@ -26,10 +41,15 @@ const TriadTrainer = (() => {
     revealBtn.addEventListener("click", onReveal);
     newBtn.addEventListener("click", newTriads);
 
+<<<<<<< HEAD
     countRadios.forEach((radio) => {
       radio.addEventListener("change", () => {
         if (radio.checked) setCount(parseInt(radio.dataset.triadCount, 10));
       });
+=======
+    Object.entries(countButtons).forEach(([n, btn]) => {
+      if (btn) btn.addEventListener("click", () => setCount(parseInt(n, 10)));
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
     });
 
     // Both filter groups need at least one box ticked, otherwise there'd be
@@ -53,11 +73,15 @@ const TriadTrainer = (() => {
       });
     });
 
+<<<<<<< HEAD
     window.addEventListener("resize", () => {
       if (!mounted) return;
       resizeCanvas();
       redraw();
     });
+=======
+    window.addEventListener("resize", () => mounted && redraw());
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
     ThemeManager.onChange(() => mounted && redraw());
 
     newTriads();
@@ -101,6 +125,10 @@ const TriadTrainer = (() => {
     window.setTimeout(() => {
       current = pickRandomTriads(triadCount, getQualities(), getInversions(), getStringSets());
       revealBtn.textContent = "Reveal names";
+<<<<<<< HEAD
+=======
+      buildLabels();
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
       resizeCanvas();
       redraw();
       requestAnimationFrame(() => canvas.classList.remove("is-swapping"));
@@ -109,16 +137,40 @@ const TriadTrainer = (() => {
 
   function setCount(n) {
     triadCount = n;
+<<<<<<< HEAD
     newTriads();
   }
 
+=======
+    Object.entries(countButtons).forEach(([val, btn]) => {
+      if (btn) btn.classList.toggle("selected", parseInt(val, 10) === n);
+    });
+    newTriads();
+  }
+
+  function buildLabels() {
+    labelRow.innerHTML = "";
+    current.forEach(() => {
+      const span = document.createElement("span");
+      span.className = "chord-label dim";
+      span.textContent = "—";
+      labelRow.appendChild(span);
+    });
+  }
+
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
   function resizeCanvas() {
     const parent = canvas.parentElement;
     const cs = window.getComputedStyle(parent);
     const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
     const dpr = window.devicePixelRatio || 1;
+<<<<<<< HEAD
     const cssW = Math.max(parent.getBoundingClientRect().width - padX, 260);
     const cssH = FretDiagram.computeLayout(cssW, current.length || triadCount).canvasH;
+=======
+    const cssW = Math.max(parent.getBoundingClientRect().width - padX, 300);
+    const cssH = 380;
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
     canvas.style.width = cssW + "px";
     canvas.style.height = cssH + "px";
     canvas.width = Math.round(cssW * dpr);
@@ -135,6 +187,7 @@ const TriadTrainer = (() => {
 
     const n = current.length;
     if (!n) return;
+<<<<<<< HEAD
     const L = FretDiagram.computeLayout(cw, n);
 
     current.forEach((c, i) => {
@@ -152,6 +205,30 @@ const TriadTrainer = (() => {
       );
     });
 
+=======
+    const pad = 14;
+    const gap = 10;
+    const cardW = (cw - pad * 2 - gap * (n - 1)) / n;
+    const cardH = ch - pad * 2;
+
+    current.forEach((c, i) => {
+      const x1 = pad + i * (cardW + gap);
+      FretDiagram.drawCard(ctx, t, x1, pad, x1 + cardW, pad + cardH);
+      FretDiagram.drawChordDiagram(ctx, t, c.frets, x1, pad + 20, cardW, cardH);
+    });
+
+    const labels = labelRow.children;
+    for (let i = 0; i < labels.length; i++) {
+      const el = labels[i];
+      if (namesRevealed) {
+        el.textContent = current[i].label;
+        el.className = "chord-label lit";
+      } else {
+        el.textContent = "—";
+        el.className = "chord-label dim";
+      }
+    }
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
   }
 
   return { init, onActivate, onDeactivate };

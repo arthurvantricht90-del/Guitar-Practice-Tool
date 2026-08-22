@@ -7,6 +7,7 @@
 // with all text counter-rotated so it stays upright.
 
 const FretDiagram = (() => {
+<<<<<<< HEAD
   // Fraction of the card the diagram grid occupies. Raised from the
   // original 0.52 now that options live in a drawer and cards have room.
   const DIAGRAM_FILL = 0.66;
@@ -71,6 +72,10 @@ const FretDiagram = (() => {
     });
     ctx.restore();
   }
+=======
+  // Fraction of the card the diagram grid occupies.
+  const DIAGRAM_FILL = 0.52;
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
 function drawCard(ctx, t, x1, y1, x2, y2, r = 12) {
   roundedRectPath(ctx, x1, y1, x2 - x1, y2 - y1, r);
   ctx.fillStyle = t.cardBg;
@@ -237,5 +242,9 @@ function drawChordDiagram(ctx, t, chordStr, xOffset, yOffset, cardW, cardH) {
 }
 
 
+<<<<<<< HEAD
   return { drawCard, drawChordDiagram, computeLayout, drawCardLabel };
+=======
+  return { drawCard, drawChordDiagram };
+>>>>>>> e0860475326020fc5dbaffefdb6ba8025a631c38
 })();
