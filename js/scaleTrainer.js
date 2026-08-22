@@ -1,0 +1,372 @@
+// Scale Trainer. Draws every note of the selected scale across the whole
+// fretboard, with root notes highlighted.
+//
+// Note spelling: rather than defaulting to sharps everywhere, each scale
+// degree takes the next letter of the alphabet and whatever accidental that
+// letter needs to hit the right pitch. That's what makes G major come out as
+// G A B C D E F# (not Gb) and F major as F G A Bb C D E (not A#).
+
+const ScaleTrainer = (() => {
+  const LETTERS = ["C", "D", "E", "F", "G", "A", "B"];
+  const LETTER_PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  // Open-string pitch classes, index 0 = low E (drawn at the bottom).
+  const OPEN_STRINGS = [4, 9, 2, 7, 11, 4];
+  const STRING_LABELS = ["E", "A", "D", "G", "B", "E"];
+  const FRET_COUNT = 22;  // standard electric guitar
+  const SINGLE_INLAYS = [3, 5, 7, 9, 15, 17, 19, 21];
+  const DOUBLE_INLAYS = [12, 24];
+  const NUMBERED_FRETS = [1, 3, 5, 7, 9, 12, 15, 17, 19, 21, 24];
+
+  // Conventional key spellings — flats where a key normally uses them.
+  const ROOTS = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+
+  const SCALE_TYPES = {
+    major: { label: "Major", intervals: [0, 2, 4, 5, 7, 9, 11] },
+    minor: { label: "Minor", intervals: [0, 2, 3, 5, 7, 8, 10] },
+    // Pentatonics are subsets of their parent scale, so they inherit its
+    // spelling by picking degrees rather than being spelled independently.
+    "major pentatonic": { label: "Major pentatonic", parent: "major", degrees: [0, 1, 2, 4, 5] },
+    "minor pentatonic": { label: "Minor pentatonic", parent: "minor", degrees: [0, 2, 3, 4, 6] },
+  };
+
+  let canvas, ctx, rootRow, typeRow, scaleNotesEl, namesToggle;
+  let mounted = false;
+  let stage, lsBtn, lsExitBtn, lsHint, section;
+  let landscape = false;  // larger-view stage active
+  let rotated = false;    // stage is quarter-turned because the phone is upright
+  let root = "G";
+  let scaleType = "major";
+  let showNames = true;
+  let spelled = []; // [{ pc, name }]
+  let pcToName = {};
+  let scalePcs = new Set();
+  let rootPc = 7;
+
+  function accidentalValue(acc) {
+    let v = 0;
+    for (const ch of acc) {
+      if (ch === "#") v += 1;
+      else if (ch === "b") v -= 1;
+    }
+    return v;
+  }
+
+  function pitchClassOf(noteName) {
+    return (LETTER_PC[noteName[0]] + accidentalValue(noteName.slice(1)) + 120) % 12;
+  }
+
+  // Spells a 7-note scale by stepping through consecutive letters.
+  function spellHeptatonic(rootName, intervals) {
+    const rootLetterIdx = LETTERS.indexOf(rootName[0]);
+    const rPc = pitchClassOf(rootName);
+    return intervals.map((semitones, i) => {
+      const letter = LETTERS[(rootLetterIdx + i) % 7];
+      const targetPc = (rPc + semitones) % 12;
+      const naturalPc = LETTER_PC[letter];
+      // Normalise the gap into -6..+5 so we get e.g. "b" rather than 11 sharps.
+      let diff = ((targetPc - naturalPc + 18) % 12) - 6;
+      const acc = diff > 0 ? "#".repeat(diff) : diff < 0 ? "b".repeat(-diff) : "";
+      return { pc: targetPc, name: letter + acc };
+    });
+  }
+
+  function buildScale() {
+    const def = SCALE_TYPES[scaleType];
+    if (def.parent) {
+      const parentSpelling = spellHeptatonic(root, SCALE_TYPES[def.parent].intervals);
+      spelled = def.degrees.map((d) => parentSpelling[d]);
+    } else {
+      spelled = spellHeptatonic(root, def.intervals);
+    }
+    pcToName = {};
+    scalePcs = new Set();
+    spelled.forEach((n) => {
+      pcToName[n.pc] = n.name;
+      scalePcs.add(n.pc);
+    });
+    rootPc = pitchClassOf(root);
+  }
+
+  // ---- larger view --------------------------------------------------------
+
+  function isPortrait() {
+    return window.innerHeight > window.innerWidth;
+  }
+
+  function enterLandscape() {
+    landscape = true;
+    rotated = isPortrait();
+    section.classList.add("landscape");
+    section.classList.toggle("rotated", rotated);
+    if (lsHint) lsHint.style.display = rotated ? "" : "none";
+    document.body.classList.add("landscape-active");
+
+    // Where the browser allows it (Android Chrome), genuinely lock to
+    // landscape. iOS doesn't support this, hence the rotation fallback.
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (req) {
+      Promise.resolve(req.call(el)).then(() => {
+        if (screen.orientation && screen.orientation.lock) {
+          return screen.orientation.lock("landscape");
+        }
+      }).catch(() => { /* fall back to the rotated stage */ });
+    }
+
+    resizeCanvas();
+    draw();
+  }
+
+  function exitLandscape() {
+    landscape = false;
+    rotated = false;
+    section.classList.remove("landscape", "rotated");
+    document.body.classList.remove("landscape-active");
+
+    try {
+      if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+    } catch (e) { /* not supported everywhere */ }
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    } else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    }
+
+    resizeCanvas();
+    draw();
+  }
+
+  // Turning the phone while the stage is open should un-rotate it.
+  function syncOrientation() {
+    if (!landscape) return;
+    const shouldRotate = isPortrait();
+    if (shouldRotate !== rotated) {
+      rotated = shouldRotate;
+      section.classList.toggle("rotated", rotated);
+      if (lsHint) lsHint.style.display = rotated ? "" : "none";
+    }
+    resizeCanvas();
+    draw();
+  }
+
+  function init(hostRoot) {
+    canvas = hostRoot.querySelector("#scale-canvas");
+    ctx = canvas.getContext("2d");
+    rootRow = hostRoot.querySelector("#scale-root-panel");
+    typeRow = hostRoot.querySelector("#scale-type-panel");
+    scaleNotesEl = hostRoot.querySelector("#scale-notes");
+    namesToggle = hostRoot.querySelector("#scale-show-names");
+    stage = hostRoot.querySelector("#scale-stage");
+    lsBtn = hostRoot.querySelector("#scale-landscape");
+    lsExitBtn = hostRoot.querySelector("#scale-ls-exit");
+    lsHint = hostRoot.querySelector("#scale-ls-hint");
+    section = hostRoot;
+
+    if (lsBtn) lsBtn.addEventListener("click", enterLandscape);
+    if (lsExitBtn) lsExitBtn.addEventListener("click", exitLandscape);
+    window.addEventListener("orientationchange", () => setTimeout(syncOrientation, 120));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && landscape) exitLandscape();
+    });
+
+    // Root options
+    ROOTS.forEach((r) => {
+      const label = document.createElement("label");
+      label.className = "opt-chip";
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = "scale-root";
+      input.dataset.root = r;
+      input.checked = r === root;
+      const span = document.createElement("span");
+      span.textContent = r;
+      label.appendChild(input);
+      label.appendChild(span);
+      input.addEventListener("change", () => { if (input.checked) setRoot(r); });
+      rootRow.appendChild(label);
+    });
+
+    // Scale type options
+    Object.entries(SCALE_TYPES).forEach(([key, def]) => {
+      const label = document.createElement("label");
+      label.className = "opt-row";
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = "scale-type";
+      input.dataset.type = key;
+      input.checked = key === scaleType;
+      const span = document.createElement("span");
+      span.textContent = def.label;
+      label.appendChild(input);
+      label.appendChild(span);
+      input.addEventListener("change", () => { if (input.checked) setType(key); });
+      typeRow.appendChild(label);
+    });
+
+    if (namesToggle) {
+      namesToggle.addEventListener("change", () => {
+        showNames = namesToggle.checked;
+        draw();
+      });
+    }
+
+    window.addEventListener("resize", () => {
+      if (!mounted) return;
+      if (landscape) { syncOrientation(); return; }
+      resizeCanvas();
+      draw();
+    });
+    ThemeManager.onChange(() => mounted && draw());
+
+    buildScale();
+  }
+
+  function onActivate() {
+    mounted = true;
+    resizeCanvas();
+    draw();
+  }
+
+  function onDeactivate() {
+    mounted = false;
+    if (landscape) exitLandscape();
+  }
+
+  function setRoot(r) {
+    root = r;
+    buildScale();
+    draw();
+  }
+
+  function setType(key) {
+    scaleType = key;
+    buildScale();
+    draw();
+  }
+
+  // Board geometry, shared by the sizing and drawing passes so they can't
+  // disagree. Given the space available it works out fret spacing first,
+  // then fits string spacing to whatever height is left, so the board always
+  // fills its box rather than being a fixed size that may not suit.
+  function boardGeometry(cssW, maxH) {
+    const tight = cssW < 560;
+    // Only drop to 12 frets when the board is genuinely too narrow for the
+    // full neck — in the larger view there's always room for all 22.
+    const toFret = tight ? 12 : FRET_COUNT;
+
+    const padX = tight ? 6 : 10;
+    const labelGap = tight ? 20 : 26;
+    const openGap = tight ? 28 : 38;
+    const numberGap = 44;
+    const topOffset = tight ? 26 : 30;
+
+    const boardW = Math.max(80, cssW - padX * 2 - labelGap - openGap - 6);
+    const fretSpacing = boardW / toFret;
+
+    let stringSpacing = Math.max(24, Math.min(fretSpacing * 1.32, 56));
+    if (maxH) {
+      // Never let the board overflow the height it has been given.
+      const room = maxH - topOffset - numberGap - 10;
+      stringSpacing = Math.max(20, Math.min(stringSpacing, room / 5));
+    }
+    const boardH = stringSpacing * 5;
+
+    return {
+      toFret, padX, labelGap, openGap, numberGap, topOffset, boardH,
+      canvasH: topOffset + boardH + numberGap + 8,
+    };
+  }
+
+  // In the larger view the board takes over the screen. If the phone is
+  // still held upright we rotate the stage a quarter turn, so physically
+  // turning the device presents the board upright and full width.
+  function stageSize() {
+    if (!landscape) {
+      const wrap = canvas.closest(".canvas-wrap");
+      const cs = window.getComputedStyle(wrap);
+      const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+      return { w: Math.max(wrap.getBoundingClientRect().width - padX, 280), h: null };
+    }
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    return rotated ? { w: vh - 16, h: vw - 16 } : { w: vw - 16, h: vh - 16 };
+  }
+
+  function resizeCanvas() {
+    const size = stageSize();
+    const g = boardGeometry(size.w, size.h);
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = size.w;
+    const cssH = size.h ? Math.min(g.canvasH, size.h) : g.canvasH;
+
+    canvas.style.width = cssW + "px";
+    canvas.style.height = cssH + "px";
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    if (stage) {
+      // The rotated stage needs explicit dimensions, since a rotation
+      // transform doesn't affect how much room the element reserves.
+      stage.style.width = landscape ? cssW + "px" : "";
+      stage.style.height = landscape ? cssH + "px" : "";
+    }
+  }
+
+  // Every position on the neck that belongs to the current scale.
+  function buildMarkers(t) {
+    const markers = [];
+    for (let s = 0; s < 6; s++) {
+      for (let f = 0; f <= FRET_COUNT; f++) {
+        const pc = (OPEN_STRINGS[s] + f) % 12;
+        if (!scalePcs.has(pc)) continue;
+        const isRoot = pc === rootPc;
+        markers.push({
+          string: s,
+          fret: f,
+          fill: isRoot ? t.accent : t.dotFill,
+          border: isRoot ? t.accentSoft : null,
+          text: showNames ? pcToName[pc] : "",
+          textColor: isRoot ? "#14110c" : t.boardBg,
+        });
+      }
+    }
+    return markers;
+  }
+
+  function draw() {
+    if (!ctx) return;
+    const t = ThemeManager.get();
+    const w = canvas.clientWidth || 900;
+    const h = canvas.clientHeight || 300;
+    ctx.clearRect(0, 0, w, h);
+
+    const g = boardGeometry(w, canvas.clientHeight || null);
+    BoardRenderer.drawSection(ctx, t, {
+      x: g.padX,
+      y: g.topOffset,
+      w: w - g.padX * 2,
+      h: g.boardH + g.numberGap,
+      fromFret: 1,
+      toFret: g.toFret,
+      showOpen: true,
+      markers: buildMarkers(t),
+      labelGap: g.labelGap,
+      openGap: g.openGap,
+      numberGap: g.numberGap,
+    });
+
+    updateCaption();
+  }
+
+  function updateCaption() {
+    if (!scaleNotesEl) return;
+    const def = SCALE_TYPES[scaleType];
+    const names = spelled.map((n) => n.name).join("  ");
+    scaleNotesEl.innerHTML =
+      `<span class="scale-name">${root} ${def.label.toLowerCase()}</span>` +
+      `<span class="scale-note-list">${names}</span>`;
+  }
+
+  return { init, onActivate, onDeactivate };
+})();

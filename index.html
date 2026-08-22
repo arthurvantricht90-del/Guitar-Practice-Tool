@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Frettr — Guitar Practice</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <button class="brand" id="brand-home" type="button">
+        <span class="brand-mark">✦</span>
+        <span class="brand-name">Frettr</span>
+      </button>
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Show modules" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-wrap">
+        <span class="nav-indicator" id="nav-indicator"></span>
+        <ul class="nav-list">
+          <li><button class="nav-item active" data-module="home">Home</button></li>
+          <li><button class="nav-item" data-module="chords">Chord Trainer</button></li>
+          <li><button class="nav-item" data-module="scales">Scale Trainer</button></li>
+          <li><button class="nav-item" data-module="triads">Triad Trainer</button></li>
+          <li><button class="nav-item" data-module="fretboard">Fretboard Trainer</button></li>
+          <li><button class="nav-item" data-module="keyjam">Key Jam</button></li>
+        </ul>
+        <button id="theme-toggle" class="theme-toggle">☾ Dark</button>
+      </div>
+    </nav>
+
+    <div class="nav-scrim" id="nav-scrim"></div>
+
+    <main class="content">
+      <!-- ============================ Home ============================ -->
+      <section id="module-home" class="module active">
+        <div class="home-hero">
+          <div class="hero-strings" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <h1 class="home-title">Welcome to Frettr</h1>
+          <p class="home-slogan">Ready to up your guitar game?</p>
+        </div>
+
+        <div class="module-grid">
+          <button class="module-card" data-module="chords" type="button">
+            <span class="module-card-title">Chord Trainer</span>
+            <span class="module-card-desc">Identify chord shapes across the neck, then reveal to check yourself.</span>
+            <span class="module-card-status available">Start training →</span>
+          </button>
+
+          <button class="module-card" data-module="scales" type="button">
+            <span class="module-card-title">Scale Trainer</span>
+            <span class="module-card-desc">Major, minor, and pentatonic scale patterns up and down the fretboard.</span>
+            <span class="module-card-status available">Start training →</span>
+          </button>
+
+          <button class="module-card" data-module="triads" type="button">
+            <span class="module-card-title">Triad Trainer</span>
+            <span class="module-card-desc">Triads and their inversions across string sets.</span>
+            <span class="module-card-status available">Start training →</span>
+          </button>
+
+          <button class="module-card" data-module="fretboard" type="button">
+            <span class="module-card-title">Fretboard Trainer</span>
+            <span class="module-card-desc">Learn every note on every string, cold.</span>
+            <span class="module-card-status available">Start training →</span>
+          </button>
+
+          <button class="module-card" data-module="keyjam" type="button">
+            <span class="module-card-title">Key Jam</span>
+            <span class="module-card-desc">Chords from one key, arriving in tempo. Play along and never stop.</span>
+            <span class="module-card-status available">Start training →</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ======================= Chord Trainer ======================== -->
+      <section id="module-chords" class="module">
+        <div class="module-header">
+          <button class="back-link" type="button">Home</button>
+          <div class="module-head-row">
+            <div class="module-head-text">
+              <h1 class="module-title">Chord Trainer</h1>
+              <p class="module-subtitle">Identify the shapes, then reveal</p>
+            </div>
+            <button class="tools-btn" type="button" data-drawer-open="chords-drawer" aria-label="Open options">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <line x1="3.5" y1="7" x2="20.5" y2="7" />
+                <line x1="3.5" y1="12" x2="20.5" y2="12" />
+                <line x1="3.5" y1="17" x2="20.5" y2="17" />
+                <circle cx="9" cy="7" r="2.4" />
+                <circle cx="15.5" cy="12" r="2.4" />
+                <circle cx="7.5" cy="17" r="2.4" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="chord-canvas"></canvas>
+        </div>
+
+        <div class="control-row">
+          <button id="reveal-btn" class="pill-btn primary">Reveal names</button>
+          <button id="new-chords-btn" class="pill-btn">New chords</button>
+        </div>
+
+        <p id="chord-hint" class="hint">Space or Enter to reveal / advance</p>
+
+        <div class="drawer-backdrop" data-drawer-close></div>
+        <aside class="drawer" id="chords-drawer" aria-hidden="true">
+          <div class="drawer-head">
+            <h2 class="drawer-title">Chord options</h2>
+            <button class="drawer-close" type="button" data-drawer-close aria-label="Close options">✕</button>
+          </div>
+          <div class="drawer-body">
+            <div class="opt-group">
+              <h3 class="opt-group-title">Chord types</h3>
+              <label class="opt-row">
+                <input type="checkbox" class="quality-check" value="major" checked />
+                <span>Major</span>
+              </label>
+              <label class="opt-row">
+                <input type="checkbox" class="quality-check" value="minor" checked />
+                <span>Minor</span>
+              </label>
+              <label class="opt-row">
+                <input type="checkbox" class="quality-check" value="major seven" checked />
+                <span>Major 7th</span>
+              </label>
+              <label class="opt-row">
+                <input type="checkbox" class="quality-check" value="minor seven" checked />
+                <span>Minor 7th</span>
+              </label>
+            </div>
+
+            <div class="opt-group">
+              <h3 class="opt-group-title">Shapes</h3>
+              <label class="opt-row">
+                <input type="checkbox" id="include-g-shapes" />
+                <span>Include G shapes</span>
+              </label>
+            </div>
+
+            <div class="opt-group">
+              <h3 class="opt-group-title">Chords per round</h3>
+              <div class="opt-segment">
+                <label class="opt-seg">
+                  <input type="radio" name="chord-count" data-count="2" checked />
+                  <span>2</span>
+                </label>
+                <label class="opt-seg">
+                  <input type="radio" name="chord-count" data-count="3" />
+                  <span>3</span>
+                </label>
+                <label class="opt-seg">
+                  <input type="radio" name="chord-count" data-count="4" />
+                  <span>4</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <!-- ======================= Scale Trainer ======================== -->
+      <section id="module-scales" class="module">
+        <div class="module-header">
+          <button class="back-link" type="button">Home</button>
+          <div class="module-head-row">
+            <div class="module-head-text">
+              <h1 class="module-title">Scale Trainer</h1>
+              <p class="module-subtitle">Pick a root and a scale to see it mapped across the neck</p>
+            </div>
+            <button class="tools-btn" type="button" data-drawer-open="scales-drawer" aria-label="Open options">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <line x1="3.5" y1="7" x2="20.5" y2="7" />
+                <line x1="3.5" y1="12" x2="20.5" y2="12" />
+                <line x1="3.5" y1="17" x2="20.5" y2="17" />
+                <circle cx="9" cy="7" r="2.4" />
+                <circle cx="15.5" cy="12" r="2.4" />
+                <circle cx="7.5" cy="17" r="2.4" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="canvas-wrap">
+          <div class="board-stage" id="scale-stage">
+            <canvas id="scale-canvas"></canvas>
+            <button class="ls-exit" id="scale-ls-exit" type="button">✕ Exit</button>
+            <p class="ls-turn-hint" id="scale-ls-hint">Turn your phone sideways ↻</p>
+          </div>
+        </div>
+
+        <button class="scale-notes" id="scale-notes" type="button" data-drawer-open="scales-drawer"></button>
+
+        <div class="control-row scale-ls-row">
+          <button id="scale-landscape" class="pill-btn">⤢ Larger view</button>
+        </div>
+
+        <p class="hint">Highlighted notes are the root — tap the scale name to change it</p>
+
+        <div class="drawer-backdrop" data-drawer-close></div>
+        <aside class="drawer" id="scales-drawer" aria-hidden="true">
+          <div class="drawer-head">
+            <h2 class="drawer-title">Scale options</h2>
+            <button class="drawer-close" type="button" data-drawer-close aria-label="Close options">✕</button>
+          </div>
+          <div class="drawer-body">
+            <div class="opt-group">
+              <h3 class="opt-group-title">Root</h3>
+              <div class="opt-grid" id="scale-root-panel"></div>
+            </div>
+
+            <div class="opt-group">
+              <h3 class="opt-group-title">Scale</h3>
+              <div id="scale-type-panel"></div>
+            </div>
+
+            <div class="opt-group">
+              <h3 class="opt-group-title">Display</h3>
+              <label class="opt-row">
+                <input type="checkbox" id="scale-show-names" checked />
+                <span>Show note names</span>
+              </label>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <!-- ======================= Triad Trainer ======================== -->
+      <section id="module-triads" class="module">
+        <div class="module-header">
+          <button class="back-link" type="button">Home</button>
+          <div class="module-head-row">
+            <div class="module-head-text">
+              <h1 class="module-title">Triad Trainer</h1>
+              <p class="module-subtitle">Identify the triad and its inversion, then reveal</p>
+            </div>
+            <button class="tools-btn" type="button" data-drawer-open="triads-drawer" aria-label="Open options">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <line x1="3.5" y1="7" x2="20.5" y2="7" />
+                <line x1="3.5" y1="12" x2="20.5" y2="12" />
+                <line x1="3.5" y1="17" x2="20.5" y2="17" />
+                <circle cx="9" cy="7" r="2.4" />
+                <circle cx="15.5" cy="12" r="2.4" />
+                <circle cx="7.5" cy="17" r="2.4" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="triad-canvas"></canvas>
+        </div>
+
+        <div class="control-row">
+          <button id="triad-reveal-btn" class="pill-btn primary">Reveal names</button>
+          <button id="triad-new-btn" class="pill-btn">New triads</button>
+        </div>
+
+        <p class="hint">Triads are three notes — no seventh chords here</p>
+
+        <div class="drawer-backdrop" data-drawer-close></div>
+        <aside class="drawer" id="triads-drawer" aria-hidden="true">
+          <div class="drawer-head">
+            <h2 class="drawer-title">Triad options</h2>
+            <button class="drawer-close" type="button" data-drawer-close aria-label="Close options">✕</button>
+          </div>
+          <div class="drawer-body">
+            <div class="opt-group">
+              <h3 class="opt-group-title">Quality</h3>
+              <label class="opt-row">
+                <input type="checkbox" class="triad-quality-check" value="major" checked />
+                <span>Major</span>
+              </label>
+              <label class="opt-row">
+                <input type="checkbox" class="triad-quality-check" value="minor" checked />
+                <span>Minor</span>
+              </label>
+            </div>
+
+            <div class="opt-group">
+              <h3 class="opt-group-title">Position</h3>
+              <label class="opt-row">
+                <input type="checkbox" class="triad-inversion-check" value="root position" checked />
+                <span>Root position</span>
+              </label>
+              <label class="opt-row">
+                <input type="checkbox" class="triad-inversion-check" value="1st inversion" checked />
+                <span>1st inversion</span>
+              </label>
+              <label class="opt-row">
+                <input type="checkbox" class="triad-inversion-check" value="2nd inversion" checked />
+                <span>2nd inversion</span>
+              </label>
+            </div>
+
+            <div class="opt-group">
+              <h3 class="opt-group-title">String set</h3>
+              <label class="opt-row">
+                <input type="checkbox" class="triad-set-check" value="E-B-G" checked />
+                <span>E-B-G <em>(highest)</em></span>
+              </label>
+              <label class="opt-row">
+                <input type="checkbox" class="triad-set-check" value="B-G-D" checked />
+                <span>B-G-D</span>
+              </label>
+              <label class="opt-row">
+                <input type="checkbox" class="triad-set-check" value="G-D-A" checked />
+                <span>G-D-A</span>
+              </label>
+              <label class="opt-row">
+                <input type="checkbox" class="triad-set-check" value="D-A-E" checked />
+                <span>D-A-E <em>(lowest)</em></span>
+              </label>
+            </div>
+
+            <div class="opt-group">
+              <h3 class="opt-group-title">Triads per round</h3>
+              <div class="opt-segment">
+                <label class="opt-seg">
+                  <input type="radio" name="triad-count" data-triad-count="2" checked />
+                  <span>2</span>
+                </label>
+                <label class="opt-seg">
+                  <input type="radio" name="triad-count" data-triad-count="3" />
+                  <span>3</span>
+                </label>
+                <label class="opt-seg">
+                  <input type="radio" name="triad-count" data-triad-count="4" />
+                  <span>4</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <!-- ====================== Fretboard Trainer ===================== -->
+      <section id="module-fretboard" class="module">
+        <div class="module-header">
+          <button class="back-link" type="button">Home</button>
+          <div class="module-head-row">
+            <div class="module-head-text">
+              <h1 class="module-title">Fretboard Trainer</h1>
+              <p class="module-subtitle">Name the marked note before the timer runs out</p>
+            </div>
+            <button class="tools-btn" type="button" data-drawer-open="fretboard-drawer" aria-label="Open options">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <line x1="3.5" y1="7" x2="20.5" y2="7" />
+                <line x1="3.5" y1="12" x2="20.5" y2="12" />
+                <line x1="3.5" y1="17" x2="20.5" y2="17" />
+                <circle cx="9" cy="7" r="2.4" />
+                <circle cx="15.5" cy="12" r="2.4" />
+                <circle cx="7.5" cy="17" r="2.4" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="fretboard-canvas"></canvas>
+        </div>
+
+        <div class="fb-progress">
+          <div class="fb-progress-fill" id="fb-progress-fill"></div>
+        </div>
+
+        <p class="fb-status" id="fb-status">Press Start to begin</p>
+
+        <div class="control-row">
+          <button id="fb-play" class="pill-btn primary">Start</button>
+        </div>
+
+        <p class="hint">The answer shows for 2 seconds, then a new note appears</p>
+
+        <div class="drawer-backdrop" data-drawer-close></div>
+        <aside class="drawer" id="fretboard-drawer" aria-hidden="true">
+          <div class="drawer-head">
+            <h2 class="drawer-title">Fretboard options</h2>
+            <button class="drawer-close" type="button" data-drawer-close aria-label="Close options">✕</button>
+          </div>
+          <div class="drawer-body">
+            <div class="opt-group">
+              <h3 class="opt-group-title">Timer</h3>
+              <div class="opt-slider-row">
+                <input type="range" id="fb-timer" class="slider" min="1" max="20" step="1" value="5" />
+                <span class="slider-value" id="fb-timer-value">5s</span>
+              </div>
+              <p class="opt-note">How long you get to name each note.</p>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <!-- ========================== Key Jam =========================== -->
+      <section id="module-keyjam" class="module">
+        <div class="module-header">
+          <button class="back-link" type="button">Home</button>
+          <div class="module-head-row">
+            <div class="module-head-text">
+              <h1 class="module-title">Key Jam</h1>
+              <p class="module-subtitle">Chords from one key, in tempo — keep playing</p>
+            </div>
+            <button class="tools-btn" type="button" data-drawer-open="keyjam-drawer" aria-label="Open options">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <line x1="3.5" y1="7" x2="20.5" y2="7" />
+                <line x1="3.5" y1="12" x2="20.5" y2="12" />
+                <line x1="3.5" y1="17" x2="20.5" y2="17" />
+                <circle cx="9" cy="7" r="2.4" />
+                <circle cx="15.5" cy="12" r="2.4" />
+                <circle cx="7.5" cy="17" r="2.4" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="kj-stage">
+          <button class="kj-key" id="kj-key-name" type="button" data-drawer-open="keyjam-drawer"></button>
+          <div class="kj-chord" id="kj-chord">—</div>
+          <div class="kj-numeral" id="kj-numeral"></div>
+          <div class="kj-next" id="kj-next">Press Start</div>
+        </div>
+
+        <div class="kj-meter">
+          <div class="kj-beats" id="kj-beats"></div>
+          <div class="kj-bar" id="kj-bar"></div>
+        </div>
+
+        <div class="fb-progress">
+          <div class="fb-progress-fill" id="kj-progress-fill"></div>
+        </div>
+
+        <div class="control-row">
+          <button id="kj-play" class="pill-btn primary">Start</button>
+        </div>
+
+        <p class="hint">Tap the key name to change key, tempo or feel</p>
+
+        <div class="drawer-backdrop" data-drawer-close></div>
+        <aside class="drawer" id="keyjam-drawer" aria-hidden="true">
+          <div class="drawer-head">
+            <h2 class="drawer-title">Key Jam options</h2>
+            <button class="drawer-close" type="button" data-drawer-close aria-label="Close options">✕</button>
+          </div>
+          <div class="drawer-body">
+            <div class="opt-group">
+              <h3 class="opt-group-title">Key</h3>
+              <div class="opt-grid" id="kj-root-panel"></div>
+            </div>
+
+            <div class="opt-group">
+              <h3 class="opt-group-title">Mode</h3>
+              <div id="kj-mode-panel"></div>
+            </div>
+
+            <div class="opt-group">
+              <h3 class="opt-group-title">Tempo</h3>
+              <div class="opt-slider-row">
+                <input type="range" id="kj-bpm" class="slider" min="40" max="200" step="1" value="90" />
+                <span class="slider-value" id="kj-bpm-value">90 BPM</span>
+              </div>
+            </div>
+
+            <div class="opt-group">
+              <h3 class="opt-group-title">Bars per chord</h3>
+              <div class="opt-segment" id="kj-bars-panel">
+                <label class="opt-seg">
+                  <input type="radio" name="kj-bars" data-bars="1" />
+                  <span>1</span>
+                </label>
+                <label class="opt-seg">
+                  <input type="radio" name="kj-bars" data-bars="2" checked />
+                  <span>2</span>
+                </label>
+                <label class="opt-seg">
+                  <input type="radio" name="kj-bars" data-bars="4" />
+                  <span>4</span>
+                </label>
+              </div>
+              <p class="opt-note">In 4/4 — how long you stay on each chord.</p>
+            </div>
+
+            <div class="opt-group">
+              <h3 class="opt-group-title">Extras</h3>
+              <label class="opt-row">
+                <input type="checkbox" id="kj-click" />
+                <span>Metronome click</span>
+              </label>
+              <label class="opt-row">
+                <input type="checkbox" id="kj-include-dim" />
+                <span>Include diminished <em>(vii°)</em></span>
+              </label>
+              <p class="opt-note">The diminished chord is diatonic but rarely used in practice, so it's off by default.</p>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/theme.js"></script>
+  <script src="js/drawer.js"></script>
+  <script src="js/boardRenderer.js"></script>
+  <script src="js/fretDiagram.js"></script>
+  <script src="js/chordData.js"></script>
+  <script src="js/chordTrainer.js"></script>
+  <script src="js/fretboardTrainer.js"></script>
+  <script src="js/scaleTrainer.js"></script>
+  <script src="js/triadData.js"></script>
+  <script src="js/triadTrainer.js"></script>
+  <script src="js/keyJam.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
